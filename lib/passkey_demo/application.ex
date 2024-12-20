@@ -7,6 +7,8 @@ defmodule PasskeyDemo.Application do
 
   @impl true
   def start(_type, _args) do
+    PasskeyDemo.User.init()
+
     children = [
       PasskeyDemoWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:passkey_demo, :dns_cluster_query) || :ignore},

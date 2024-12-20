@@ -10,6 +10,10 @@ defmodule PasskeyDemoWeb.Router do
     plug :put_secure_browser_headers
   end
 
+  pipeline :auth do
+    plug PasskeyDemoWeb.Auth
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
   end
@@ -17,7 +21,17 @@ defmodule PasskeyDemoWeb.Router do
   scope "/", PasskeyDemoWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    get "/login/:token", PageController, :login
+    get "/logout", PageController, :logout
+
+    live_session :check_session, on_mount: PasskeyDemoWeb.LiveAuth do
+      live "/", PasskeyLive
+    end
+  end
+
+  scope "/", PasskeyDemoWeb do
+    pipe_through [:browser, :auth]
+    get "/me", PageController, :me
   end
 
   # Other scopes may use custom stacks.

@@ -1,0 +1,8 @@
+<.flash_group flash={@flash} />
+<div class="space-y-4">
+  <div class="text-2xl font-bold">Welcome {@user.username}!</div>
+  <div>You have successfully created a passkey!</div>
+  <.button type="button">
+    <.link href={~p"/logout"}>Sign out</.link>
+  </.button>
+</div>
