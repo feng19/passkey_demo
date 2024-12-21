@@ -5,7 +5,7 @@ defmodule PasskeyDemoWeb.PasskeyLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, supported: false, username: "", login: false)}
+    {:ok, assign(socket, supported: false, register_disabled: true)}
   end
 
   @impl true
@@ -28,7 +28,17 @@ defmodule PasskeyDemoWeb.PasskeyLive do
   end
 
   def handle_event("reg-validate", %{"username" => username}, socket) do
-    {:noreply, assign(socket, username: username)}
+    register_disabled = User.get_by_username(username) |> length() > 0
+
+    socket =
+      if register_disabled do
+        put_flash(socket, :error, "#user: #{username} already existed")
+      else
+        socket
+      end
+      |> assign(register_disabled: register_disabled)
+
+    {:noreply, socket}
   end
 
   def handle_event("register", %{"username" => username}, socket) do
@@ -136,7 +146,7 @@ defmodule PasskeyDemoWeb.PasskeyLive do
     %{
       # "authenticatorData64" => authenticator_data_64,
       # "clientDataArray" => client_data_array,
-      "rawId64" => raw_id_64,
+      "rawId64" => raw_id_64
       # "signature64" => signature_64,
       # "type" => type
     } = payload

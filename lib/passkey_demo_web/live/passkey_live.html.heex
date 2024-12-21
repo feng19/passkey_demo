@@ -9,12 +9,13 @@
       <.input
         name="username"
         placeholder="Enter username"
+        phx-debounce="2000"
         value=""
         autocomplete="webauthn"
         disabled={!@supported}
         required
       />
-      <.button type="submit" disabled={!@supported}>
+      <.button type="submit" disabled={!@supported || @register_disabled}>
         Sign up
       </.button>
     </form>
