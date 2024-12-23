@@ -150,7 +150,7 @@ defmodule PasskeyDemoWeb.PasskeyLive do
       "clientDataArray" => client_data_array,
       "rawId64" => raw_id_64,
       "signature64" => signature_64,
-      "type" => type
+      "type" => _type
     } = payload
 
     socket =
@@ -166,7 +166,7 @@ defmodule PasskeyDemoWeb.PasskeyLive do
                challenge,
                [{key_id, public_key}]
              ) do
-          {:ok, auth_data} ->
+          {:ok, _auth_data} ->
             token = Token.sign(user_id)
             redirect(socket, to: ~p"/login/#{token}")
 
