@@ -143,29 +143,42 @@ defmodule PasskeyDemoWeb.PasskeyLive do
   end
 
   def handle_event("authentication-attestation", payload, socket) do
+    %{challenge: challenge} = socket.assigns
+
     %{
-      # "authenticatorData64" => authenticator_data_64,
-      # "clientDataArray" => client_data_array,
-      "rawId64" => raw_id_64
-      # "signature64" => signature_64,
-      # "type" => type
+      "authenticatorData64" => authenticator_data_64,
+      "clientDataArray" => client_data_array,
+      "rawId64" => raw_id_64,
+      "signature64" => signature_64,
+      "type" => type
     } = payload
 
-    raw_id = Base.decode64!(raw_id_64, padding: false)
-    # authenticator_data = Base.decode64!(authenticator_data_64, padding: false)
-    # signature = Base.decode64!(signature_64, padding: false)
+    socket =
+      with {:ok, raw_id} <- Base.decode64(raw_id_64, padding: false),
+           {:ok, authenticator_data} <- Base.decode64(authenticator_data_64, padding: false),
+           {:ok, signature} <- Base.decode64(signature_64, padding: false),
+           [{user_id, _name, _username, key_id, public_key}] <- User.get_by_key_id(raw_id) do
+        case Wax.authenticate(
+               raw_id,
+               authenticator_data,
+               signature,
+               client_data_array,
+               challenge,
+               [{key_id, public_key}]
+             ) do
+          {:ok, auth_data} ->
+            token = Token.sign(user_id)
+            redirect(socket, to: ~p"/login/#{token}")
 
-    # attestation = %{
-    #   authenticator_data: authenticator_data,
-    #   client_data_array: client_data_array,
-    #   raw_id: raw_id,
-    #   signature: signature,
-    #   type: type
-    # }
+          {:error, error} ->
+            message = Exception.message(error)
+            put_flash(socket, :error, message)
+        end
+      else
+        _ -> put_flash(socket, :error, "invalid credentials")
+      end
 
-    [{user_id, _name, _username, _key_id, _public_key}] = User.get_by_key_id(raw_id)
-    token = Token.sign(user_id)
-    {:noreply, redirect(socket, to: ~p"/login/#{token}")}
+    {:noreply, socket}
   end
 
   def handle_event("error", %{"message" => _message}, socket) do
